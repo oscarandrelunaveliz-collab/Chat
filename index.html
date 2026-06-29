@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Clone Realtime</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div style="font-size: 60px; color: #00a884; margin-bottom: 20px;">
+                <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <h2>Ingresa tu nombre de usuario</h2>
+            <input type="text" id="usernameInput" placeholder="Ej: celular o laptop" autocomplete="off">
+            <button id="loginBtn">Entrar al Chat</button>
+        </div>
+    </div>
+
+    <div id="appContainer" class="app-container" style="display: none;">
+        
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-avatar" id="myUserDisplay">--</div>
+                <div class="header-icons">
+                    <button class="icon-btn" id="addContactBtn" title="Agregar contacto">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-input-container">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Buscar o empezar un nuevo chat">
+                </div>
+            </div>
+
+            <div class="chats-container" id="chatsList">
+                </div>
+        </div>
+
+        <div class="chat-window">
+            <div class="chat-header">
+                <div class="chat-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="chat-info">
+                    <h3 id="activeChatName">Selecciona un contacto</h3>
+
+                </div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                </div>
+
+            <div class="chat-input-bar">
+                <button type="button" class="icon-btn" id="emojiBtn">
+                    <i class="fa-regular fa-face-smile"></i>
+                </button>
+
+                <form id="messageForm" style="display: none; flex: 1; gap: 16px;">
+                    <input type="text" id="messageInput" placeholder="Escribe un mensaje" autocomplete="off">
+                    <button type="submit" class="icon-btn" id="sendBtn">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                </form>
+
+                <input type="file" id="stickerLoader" accept="image/*" style="display: none;">
+            </div>
+
+        </div>
+
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

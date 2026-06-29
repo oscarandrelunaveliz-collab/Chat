@@ -47,6 +47,7 @@ const messagesContainer = document.getElementById('messagesContainer');
 const sendBtn = document.getElementById('sendBtn');
 const emojiBtn = document.getElementById('emojiBtn');
 const stickerLoader = document.getElementById('stickerLoader');
+const backToChatsBtn = document.getElementById('backToChatsBtn');
 
 // 1. INICIAR SESIÓN LOCAL (CORREGIDO)
 loginBtn.addEventListener('click', async () => {
@@ -104,6 +105,7 @@ function listenToMyContacts() {
 
 // 4. SELECCIONAR UN CHAT Y CARGAR SUS MENSAJES
 function selectChat(partner) {
+    appContainer.classList.add('show-chat');
     activeChatPartner = partner;
     activeChatName.textContent = partner;
     messageForm.style.display = "flex";
@@ -315,4 +317,12 @@ messageInput.addEventListener('input', () => {
 
 function escapeHTML(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+// Función para regresar a la lista de chats en celulares
+if (backToChatsBtn) {
+    backToChatsBtn.addEventListener('click', () => {
+        appContainer.classList.remove('show-chat');
+        activeChatPartner = "";
+        if (unsubscribeMessages) unsubscribeMessages();
+    });
 }

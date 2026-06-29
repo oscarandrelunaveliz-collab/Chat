@@ -523,3 +523,45 @@ body {
     font-size: 11px;
     margin-top: 4px;
 }
+/* ==========================================
+   DISEÑO RESPONSIVO PARA CELULARES
+   ========================================== */
+@media (max-width: 768px) {
+    /* Hacemos que los contenedores ocupen todo el ancho */
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        min-width: 100%;
+        display: flex; /* Visible por defecto al inicio */
+    }
+
+    .chat-window {
+        width: 100%;
+        display: none; /* Oculta por defecto hasta elegir un chat */
+    }
+
+    /* Mostrar el botón de la flecha hacia atrás en la cabecera */
+    .back-btn {
+        display: flex !important;
+    }
+
+    /* Ajustar el panel flotante de emojis para que no se desborde en pantallas chicas */
+    .picker-container {
+        width: calc(100% - 48px);
+        left: 24px;
+        bottom: 70px;
+    }
+    
+    #tab-emojis.active {
+        grid-template-columns: repeat(6, 1fr); /* 6 columnas en vez de 7 para que quepan bien */
+    }
+
+    /* Clases auxiliares para alternar vistas usando JavaScript */
+    .app-container.show-chat .sidebar {
+        display: none !important;
+    }
+
+    .app-container.show-chat .chat-window {
+        display: flex !important;
+    }
+}

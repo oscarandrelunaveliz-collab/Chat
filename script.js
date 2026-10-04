@@ -1,328 +1,304 @@
-// Importar módulos de Firebase desde la web
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, addDoc, query, orderBy, onSnapshot, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// Importar los módulos de Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// !!! REEMPLAZA ESTE BLOQUE CON TUS CREDENCIALES REALES DE FIREBASE !!!
+// Tus credenciales reales de Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyDYSwltdNcLOl5qp-hAOIwjbidF_dbMT2k",
-    authDomain: "whatsapp-clone-4c40c.firebaseapp.com",
-    projectId: "whatsapp-clone-4c40c",
-    storageBucket: "whatsapp-clone-4c40c.firebasestorage.app",
-    messagingSenderId: "184448223126",
-    appId: "1:184448223126:web:2c31ad74a48d4c6cb47fb7",
-    measurementId: "G-T2Q2Y1YBM1"
+  apiKey: "AIzaSyD0nF1lLxsyK1V0LCRE_uuuZGGG7I7NjLA",
+  authDomain: "agenda-6toa.firebaseapp.com",
+  databaseURL: "https://agenda-6toa-default-rtdb.firebaseio.com",
+  projectId: "agenda-6toa",
+  storageBucket: "agenda-6toa.firebasestorage.app",
+  messagingSenderId: "508072085664",
+  appId: "1:508072085664:web:a36d82cc47ac5534d4a1c6"
 };
 
-// Inicializar Firebase y la Base de Datos
+// Inicializar la conexión con la base de datos
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getDatabase(app);
+lucide.createIcons();
 
-// Variables globales de la app
-let currentUser = "";
-let activeChatPartner = "";
-let unsubscribeMessages = null;
-let pickerContainer = null;
-let stickerGrid = null;
-
-const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😍', '🥰', '😘', '😜', '😎', '👍', '❤️'];
-const stickers = [
-    'https://openmoji.org/data/color/svg/1F436.svg',
-    'https://openmoji.org/data/color/svg/1F431.svg',
-    'https://openmoji.org/data/color/svg/1F996.svg',
-    'https://openmoji.org/data/color/svg/1F427.svg'
+// Lista oficial del curso
+const studentsList = [
+  "ADUVIRI MAMANI CRISTHOFER",
+  "ALARCON GAMBOA ANDY",
+  "ARAGON HUARACHI NATALY SHAROM",
+  "ARO RAMIREZ MADELENE CELESTE",
+  "AYZA APAZA ROMINA CINDEL",
+  "CALAMANI CALLISAYA MAYUMI DANIELA",
+  "CALLE RODRIGUEZ GUADALUPE LUZ",
+  "CALLISAYA QUICSO MILENA ANGELES",
+  "CASTILLO CHURQUI ADRIAN",
+  "CHAVEZ PAINE JACQUELINE LUISA",
+  "CONDORI CAMEO JHERSON",
+  "GUILLEN RAMOS FABIAN ANTONIO",
+  "HUANCA APANQUI AMERICA AMELY",
+  "LAURA HINOJOSA ADRIAN",
+  "LIMA CHACALLUCA GAEL ALDO",
+  "LOPEZ POMA NAOMI KAYLA",
+  "LUNA VELIZ OSCAR ANDRE",
+  "MAMANI CHOQUE MADELEIN ESTEFANI",
+  "MAMANI QUISPE FERNANDO JOSUE",
+  "MAMANI YUPANQUI SAYDE MIRIAM",
+  "MONTES VILLEGAS MATEO FABIAN",
+  "MONTIEL CALLE LUIS ALBERTO",
+  "QUISPE MAMANI MAITE ANAHI",
+  "QUISPE PERALTA ALBERT LEONEL",
 ];
 
+// Estudiante actual activo en el dispositivo
+let currentStudent = localStorage.getItem('current_student_user') || '';
+
+// Cargar tareas guardadas
+let tasks = JSON.parse(localStorage.getItem('curso_tareas')) || [];
+
 // Elementos del DOM
-const loginScreen = document.getElementById('loginScreen');
-const appContainer = document.getElementById('appContainer');
-const usernameInput = document.getElementById('usernameInput');
-const loginBtn = document.getElementById('loginBtn');
-const myUserDisplay = document.getElementById('myUserDisplay');
-const addContactBtn = document.getElementById('addContactBtn');
-const chatsList = document.getElementById('chatsList');
-const activeChatName = document.getElementById('activeChatName');
-const messageForm = document.getElementById('messageForm');
-const messageInput = document.getElementById('messageInput');
-const messagesContainer = document.getElementById('messagesContainer');
-const sendBtn = document.getElementById('sendBtn');
-const emojiBtn = document.getElementById('emojiBtn');
-const stickerLoader = document.getElementById('stickerLoader');
-const backToChatsBtn = document.getElementById('backToChatsBtn');
+const tasksContainer = document.getElementById('tasks-container');
+const activeUserSelect = document.getElementById('active-user-select');
+const searchInput = document.getElementById('search-input');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
 
-// 1. INICIAR SESIÓN LOCAL (CORREGIDO)
-loginBtn.addEventListener('click', async () => {
-    const user = usernameInput.value.trim().toLowerCase();
-    if (!user) return alert("Ingresa un nombre válido");
+// Inicializar el selector de estudiante activo
+function initUserSelector() {
+  if (!activeUserSelect) return;
+  activeUserSelect.innerHTML = '<option value="" disabled selected>¿Quién eres? Selecciona tu nombre...</option>';
+  
+  studentsList.forEach(student => {
+    const opt = document.createElement('option');
+    opt.value = student;
+    opt.textContent = student;
+    if (student === currentStudent) opt.selected = true;
+    activeUserSelect.appendChild(opt);
+  });
 
-    currentUser = user;
-    myUserDisplay.textContent = currentUser.substring(0, 2).toUpperCase();
-    
-    // Guardar usuario en la base de datos para que otros puedan buscarlo
-    await setDoc(doc(db, "users", currentUser), { name: currentUser });
-
-    // Cambiar de pantalla (ERROR SOLUCIONADO AQUÍ)
-    loginScreen.style.display = "none";
-    appContainer.style.display = "flex";
-
-    createPicker(); // Inicializar el panel de emojis y stickers
-    listenToMyContacts(); // Escuchar si alguien nos agrega o tenemos chats
-});
-
-// 2. AGREGAR UN CONTACTO (Para buscar al otro dispositivo)
-addContactBtn.addEventListener('click', async () => {
-    const targetUser = prompt("¿A qué usuario quieres agregar? (Ej: celular o laptop)").trim().toLowerCase();
-    if (!targetUser || targetUser === currentUser) return alert("Usuario no válido");
-
-    // Guardar la relación en la base de datos
-    await setDoc(doc(db, "users", currentUser, "contacts", targetUser), { name: targetUser });
-    await setDoc(doc(db, "users", targetUser, "contacts", currentUser), { name: currentUser });
-});
-
-// 3. ESCUCHAR CONTACTOS EN TIEMPO REAL
-function listenToMyContacts() {
-    const q = collection(db, "users", currentUser, "contacts");
-    onSnapshot(q, (snapshot) => {
-        chatsList.innerHTML = "";
-        if(snapshot.empty) {
-            chatsList.innerHTML = `<p style="color:gray; text-align:center; padding:20px;">Haz clic en el '+' de arriba para agregar a tu otro dispositivo.</p>`;
-        }
-        snapshot.forEach((doc) => {
-            const contactName = doc.data().name;
-            const chatItem = document.createElement('div');
-            chatItem.classList.add('chat-item');
-            if(contactName === activeChatPartner) chatItem.classList.add('active');
-            
-            chatItem.innerHTML = `
-                <div class="chat-item-avatar">${contactName.substring(0,2).toUpperCase()}</div>
-                <div class="chat-item-info"><h4>${contactName}</h4></div>
-            `;
-            
-            chatItem.addEventListener('click', () => selectChat(contactName));
-            chatsList.appendChild(chatItem);
-        });
-    });
+  activeUserSelect.addEventListener('change', (e) => {
+    currentStudent = e.target.value;
+    localStorage.setItem('current_student_user', currentStudent);
+    renderTasks();
+  });
 }
 
-// 4. SELECCIONAR UN CHAT Y CARGAR SUS MENSAJES
-function selectChat(partner) {
-    appContainer.classList.add('show-chat');
-    activeChatPartner = partner;
-    activeChatName.textContent = partner;
-    messageForm.style.display = "flex";
-    
-    // Resaltar chat seleccionado
-    document.querySelectorAll('.chat-item').forEach(item => {
-        if(item.querySelector('h4').textContent === partner) item.classList.add('active');
-        else item.classList.remove('active');
-    });
+// Renderizar Tareas
+function renderTasks(filter = 'todas', query = '') {
+  tasksContainer.innerHTML = '';
 
-    // Cancelar escucha del chat anterior si existía
-    if (unsubscribeMessages) unsubscribeMessages();
+  const filteredTasks = tasks.filter(task => {
+    const completedByList = task.completedBy || [];
+    const isDoneByMe = currentStudent ? completedByList.includes(currentStudent) : false;
 
-    // ID único para la conversación de estos dos usuarios (ordenado alfabéticamente)
-    const chatId = [currentUser, activeChatPartner].sort().join("_");
+    const matchesFilter = 
+      filter === 'todas' ? true :
+      filter === 'pendientes' ? !isDoneByMe :
+      filter === 'listas' ? isDoneByMe : true;
 
-    // Escuchar mensajes nuevos en tiempo real
-    const q = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
-    unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        messagesContainer.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message');
-            msgDiv.classList.add(data.sender === currentUser ? 'sent' : 'received');
-            
-            if(data.type === 'sticker') {
-                msgDiv.classList.add('message-sticker');
-                msgDiv.innerHTML = `<img src="${data.content}" class="sticker-chat-img"><span class="message-time">${data.time}</span>`;
-            } else {
-                msgDiv.innerHTML = `<p>${escapeHTML(data.content)}</p><span class="message-time">${data.time}</span>`;
-            }
-            messagesContainer.appendChild(msgDiv);
-        });
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    });
-}
+    const matchesQuery = 
+      task.subject.toLowerCase().includes(query.toLowerCase()) ||
+      task.description.toLowerCase().includes(query.toLowerCase());
 
-// 5. ENVIAR MENSAJES DE TEXTO
-messageForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = messageInput.value.trim();
-    if (!text || !activeChatPartner) return;
+    return matchesFilter && matchesQuery;
+  });
 
-    const chatId = [currentUser, activeChatPartner].sort().join("_");
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  // Calcular progreso general del alumno seleccionado
+  if (currentStudent && tasks.length > 0) {
+    const completedCount = tasks.filter(t => (t.completedBy || []).includes(currentStudent)).length;
+    const percentage = Math.round((completedCount / tasks.length) * 100);
+    progressBar.style.width = `${percentage}%`;
+    progressText.textContent = `${percentage}% completado (${completedCount}/${tasks.length})`;
+  } else {
+    progressBar.style.width = `0%`;
+    progressText.textContent = `PROGRESO`;
+  }
 
-    messageInput.value = "";
-    sendBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
-    
-    await addDoc(collection(db, "chats", chatId, "messages"), {
-        sender: currentUser,
-        content: text,
-        type: 'text',
-        time: timeStr,
-        timestamp: Date.now()
-    });
-});
+  if (filteredTasks.length === 0) {
+    tasksContainer.innerHTML = `
+      <div class="text-center py-10 space-y-2 bg-slate-900/40 rounded-2xl border border-slate-800">
+        <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-slate-600"></i>
+        <p class="text-xs text-slate-500">No hay tareas encontradas en esta sección.</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
 
-// 6. ENVIAR STICKERS A LA BASE DE DATOS
-async function sendSticker(stickerUrl) {
-    if (!activeChatPartner) return;
+  filteredTasks.forEach(task => {
+    const completedByList = task.completedBy || [];
+    const isDoneByMe = currentStudent ? completedByList.includes(currentStudent) : false;
+    const totalDone = completedByList.length;
 
-    const chatId = [currentUser, activeChatPartner].sort().join("_");
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const card = document.createElement('div');
+    card.className = `p-4 rounded-2xl border transition-all ${
+      isDoneByMe ? 'bg-slate-900/50 border-emerald-900/40 opacity-85' : 'bg-slate-900 border-slate-800'
+    }`;
 
-    if (pickerContainer) pickerContainer.style.display = 'none';
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="space-y-1 flex-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              ${task.subject}
+            </span>
+            <span class="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-800 text-slate-400">
+              Entrega: ${task.dueDate}
+            </span>
+          </div>
 
-    await addDoc(collection(db, "chats", chatId, "messages"), {
-        sender: currentUser,
-        content: stickerUrl,
-        type: 'sticker',
-        time: timeStr,
-        timestamp: Date.now()
-    });
-}
+          <p class="text-xs font-medium ${isDoneByMe ? 'line-through text-slate-400' : 'text-slate-100'}">
+            ${task.description}
+          </p>
 
-// LÓGICA DEL PANEL FLOTANTE (EMOJIS / STICKERS)
-function createPicker() {
-    pickerContainer = document.createElement('div');
-    pickerContainer.classList.add('picker-container');
-    pickerContainer.style.display = 'none';
+          <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+            <span>Aviso de: <strong class="text-slate-300">${task.author}</strong></span>
+            <span class="text-emerald-400 font-semibold">${totalDone}/${studentsList.length} compañeros la hicieron</span>
+          </div>
+        </div>
 
-    const tabsHeader = document.createElement('div');
-    tabsHeader.classList.add('picker-tabs');
-    tabsHeader.innerHTML = `
-        <button class="tab-btn active" data-tab="emojis">😄 Emojis</button>
-        <button class="tab-btn" data-tab="stickers">🖼️ Stickers</button>
+        <div class="flex items-center gap-1">
+          <!-- Botón Marcar Tarea -->
+          <button onclick="toggleTaskForStudent(${task.id})" class="p-2 rounded-xl transition-all ${
+            isDoneByMe 
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+              : 'bg-slate-800 text-slate-400 hover:text-white'
+          }" title="${isDoneByMe ? 'Marcar como pendiente' : 'Marcar como completada'}">
+            <i data-lucide="${isDoneByMe ? 'check-square' : 'square'}" class="w-5 h-5"></i>
+          </button>
+
+          <!-- Botón Eliminar Tarea -->
+          <button onclick="deleteTask(${task.id})" class="p-2 rounded-xl bg-slate-800/80 text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition-all" title="Eliminar tarea">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
     `;
 
-    const contentContainer = document.createElement('div');
-    contentContainer.classList.add('picker-content');
+    tasksContainer.appendChild(card);
+  });
 
-    // Rejilla de Emojis
-    const emojiGrid = document.createElement('div');
-    emojiGrid.classList.add('grid-panel', 'active');
-    emojiGrid.id = 'tab-emojis';
-    emojis.forEach(emoji => {
-        const span = document.createElement('span');
-        span.classList.add('picker-item');
-        span.textContent = emoji;
-        span.addEventListener('click', (e) => {
-            e.preventDefault();
-            insertEmoji(emoji);
-        });
-        emojiGrid.appendChild(span);
-    });
-
-    // Rejilla de Stickers
-    stickerGrid = document.createElement('div');
-    stickerGrid.classList.add('grid-panel');
-    stickerGrid.id = 'tab-stickers';
-    
-    stickers.forEach(url => appendStickerToGrid(url));
-    createAddStickerButton();
-
-    contentContainer.appendChild(emojiGrid);
-    contentContainer.appendChild(stickerGrid);
-    pickerContainer.appendChild(tabsHeader);
-    pickerContainer.appendChild(contentContainer);
-    document.querySelector('.chat-window').appendChild(pickerContainer);
-
-    // Eventos para cambiar entre pestañas
-    tabsHeader.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            tabsHeader.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            contentContainer.querySelectorAll('.grid-panel').forEach(p => p.classList.remove('active'));
-            
-            btn.classList.add('active');
-            document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-        });
-    });
+  lucide.createIcons();
+  // Volver a renderizar los iconos de Lucide
+if (window.lucide) {
+  window.lucide.createIcons();
+}
 }
 
-function appendStickerToGrid(url) {
-    const img = document.createElement('img');
-    img.classList.add('picker-sticker-img');
-    img.src = url;
-    img.alt = 'Sticker';
-    img.addEventListener('click', (e) => {
-        e.preventDefault();
-        sendSticker(url);
-    });
-    stickerGrid.appendChild(img);
-}
+// Marcar/Desmarcar tarea para el estudiante actual
+window.toggleTaskForStudent = function(taskId) {
+  if (!currentStudent) {
+    alert("Por favor selecciona primero tu nombre en el selector superior para registrar tu tarea.");
+    return;
+  }
 
-function createAddStickerButton() {
-    const addBtn = document.createElement('div');
-    addBtn.classList.add('picker-sticker-add-btn');
-    addBtn.id = 'addNewStickerBtn';
-    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
-    addBtn.addEventListener('click', () => stickerLoader.click());
-    stickerGrid.appendChild(addBtn);
-}
-
-// Cargar imagen local como sticker personalizado
-if (stickerLoader) {
-    stickerLoader.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const customStickerUrl = event.target.result;
-            const addBtn = document.getElementById('addNewStickerBtn');
-            if (addBtn) addBtn.remove();
-
-            appendStickerToGrid(customStickerUrl);
-            createAddStickerButton();
-        };
-        reader.readAsDataURL(file);
-        stickerLoader.value = '';
-    });
-}
-
-function insertEmoji(emoji) {
-    const startPos = messageInput.selectionStart;
-    const endPos = messageInput.selectionEnd;
-    messageInput.value = messageInput.value.substring(0, startPos) + emoji + messageInput.value.substring(endPos);
-    messageInput.focus();
-    const newPos = startPos + emoji.length;
-    messageInput.setSelectionRange(newPos, newPos);
-}
-
-// Mostrar / Ocultar panel flotante
-if (emojiBtn) {
-    emojiBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (!pickerContainer) return;
-        const isHidden = pickerContainer.style.display === 'none';
-        pickerContainer.style.display = isHidden ? 'flex' : 'none';
-    });
-}
-
-document.addEventListener('click', (e) => {
-    if (pickerContainer && !pickerContainer.contains(e.target) && e.target !== emojiBtn) {
-        pickerContainer.style.display = 'none';
+  tasks = tasks.map(task => {
+    if (task.id === taskId) {
+      let completedBy = task.completedBy || [];
+      if (completedBy.includes(currentStudent)) {
+        completedBy = completedBy.filter(name => name !== currentStudent);
+      } else {
+        completedBy.push(currentStudent);
+      }
+      return { ...task, completedBy };
     }
-});
+    return task;
+  });
 
-// Cambiar icono de enviar dinámicamente
-messageInput.addEventListener('input', () => {
-    sendBtn.innerHTML = messageInput.value.trim() !== '' ? 
-        '<i class="fa-solid fa-paper-plane"></i>' : '<i class="fa-solid fa-microphone"></i>';
-});
+  localStorage.setItem('curso_tareas', JSON.stringify(tasks));
+  renderTasks(document.querySelector('.filter-btn.active')?.dataset.filter || 'todas', searchInput.value);
+};
 
-function escapeHTML(text) {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-// Función para regresar a la lista de chats en celulares
-if (backToChatsBtn) {
-    backToChatsBtn.addEventListener('click', () => {
-        appContainer.classList.remove('show-chat');
-        activeChatPartner = "";
-        if (unsubscribeMessages) unsubscribeMessages();
+// Eliminar Tarea de la lista general
+window.deleteTask = function(taskId) {
+  if (confirm("¿Estás seguro de que deseas eliminar esta tarea del curso?")) {
+    tasks = tasks.filter(task => task.id !== taskId);
+    localStorage.setItem('curso_tareas', JSON.stringify(tasks));
+    renderTasks(document.querySelector('.filter-btn.active')?.dataset.filter || 'todas', searchInput.value);
+  }
+};
+
+// Filtros y Buscador
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('active', 'bg-indigo-600', 'text-white');
+      b.classList.add('text-slate-400');
     });
-}
+    btn.classList.add('active', 'bg-indigo-600', 'text-white');
+    btn.classList.remove('text-slate-400');
+    renderTasks(btn.dataset.filter, searchInput.value);
+  });
+});
+
+searchInput?.addEventListener('input', (e) => {
+  const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'todas';
+  renderTasks(activeFilter, e.target.value);
+});
+
+// Modal para agregar tarea
+const modal = document.getElementById('modal');
+document.getElementById('open-modal')?.addEventListener('click', () => modal.classList.remove('hidden', 'items-end'));
+document.getElementById('close-modal')?.addEventListener('click', () => modal.classList.add('hidden'));
+
+document.getElementById('task-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const newTask = {
+    id: Date.now(),
+    subject: document.getElementById('subject').value || 'General',
+    description: document.getElementById('description').value,
+    priority: document.getElementById('priority').value,
+    dueDate: document.getElementById('due-date').value,
+    author: document.getElementById('author').value,
+    completedBy: []
+  };
+
+  // Guardar la nueva tarea en Firebase
+const tareasRef = ref(db, 'tareas');
+push(tareasRef, newTask)
+  .then(() => {
+    console.log("Tarea guardada exitosamente en Firebase");
+  })
+  .catch((error) => {
+    console.error("Error al guardar en Firebase:", error);
+  });
+  localStorage.setItem('curso_tareas', JSON.stringify(tasks));
+
+  e.target.reset();
+  modal.classList.add('hidden');
+  renderTasks();
+});
+
+// Inicialización
+initUserSelector();
+// Escuchar cambios de tareas en Firebase en tiempo real
+const tareasRef = ref(db, 'tareas');
+onValue(tareasRef, (snapshot) => {
+  const data = snapshot.val();
+  
+  // Si existen tareas en la nube, las convertimos en arreglo; si no, queda vacío
+  tasks = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+  
+  // Detectar filtro activo
+  const activeBtn = document.querySelector('.filter-btn.active');
+  const currentFilter = activeBtn ? activeBtn.dataset.filter : 'todas';
+  
+  // Volver a dibujar la lista en pantalla
+  renderTasks(currentFilter, searchInput ? searchInput.value : '');
+  
+  // Volver a renderizar los iconos de Lucide
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Cargar la lista de estudiantes en el selector
+  if (typeof initUserSelector === 'function') {
+    initUserSelector();
+  }
+  
+  // 2. Renderizar iconos de Lucide
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+});
+// Exponer funciones al scope global para eventos HTML (onclick, onchange, etc.)
+window.lucide = lucide;
+window.initUserSelector = initUserSelector; // O la función que llena el selector de alumnos

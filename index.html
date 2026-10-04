@@ -1,84 +1,170 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Clone Realtime</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda 6to A</title>
+
+  <!-- Favicon y Tailwind CDN -->
+  <link rel="icon" type="image/png" sizes="32x32" href="Logo agenda-Photoroom.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24">
 
-    <div id="loginScreen" class="login-container">
-        <div class="login-box">
-            <div style="font-size: 60px; color: #00a884; margin-bottom: 20px;">
-                <i class="fa-brands fa-whatsapp"></i>
-            </div>
-            <h2>Ingresa tu nombre de usuario</h2>
-            <input type="text" id="usernameInput" placeholder="Ej: celular o laptop" autocomplete="off">
-            <button id="loginBtn">Entrar al Chat</button>
+  <!-- Encabezado Principal -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-3 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-2">
+      
+      <!-- Título e Icono -->
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="p-2 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl shadow-lg shadow-indigo-500/20 shrink-0">
+          <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
         </div>
-    </div>
-
-    <div id="appContainer" class="app-container" style="display: none;">
-        
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="user-avatar" id="myUserDisplay">--</div>
-                <div class="header-icons">
-                    <button class="icon-btn" id="addContactBtn" title="Agregar contacto">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                    <button class="icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                </div>
-            </div>
-
-            <div class="search-bar">
-                <div class="search-input-container">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Buscar o empezar un nuevo chat">
-                </div>
-            </div>
-
-            <div class="chats-container" id="chatsList">
-                </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="font-bold text-sm sm:text-base text-white tracking-tight whitespace-nowrap truncate">Agenda 6to A</h1>
+          <p class="text-[10px] sm:text-xs text-slate-400 font-medium whitespace-nowrap truncate">Ayuda de curso</p>
         </div>
+      </div>
 
-        <div class="chat-window">
-            <div class="chat-header">
-                <button class="icon-btn back-btn" id="backToChatsBtn" style="margin-right: 15px; display: none;">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
+      <!-- Botones de Navegación -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <a href="kardex.html" class="bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700/80 p-2 sm:px-2.5 sm:py-2 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold active:scale-95" title="Kárdex">
+          <i data-lucide="file-warning" class="w-4 h-4"></i>
+          <span class="hidden md:inline">Kárdex</span>
+        </a>
 
-                <div class="chat-avatar"><i class="fa-solid fa-user"></i></div>
-                <div class="chat-info">
-                    <h3 id="activeChatName">Selecciona un contacto</h3>
-                    <p>En línea</p>
-                </div>
-            </div>
+        <a href="calendario.html" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 border border-slate-700/80 p-2 sm:px-2.5 sm:py-2 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold active:scale-95" title="Calendario">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span class="hidden md:inline">Calendario</span>
+        </a>
 
-            <div class="messages-container" id="messagesContainer">
-                </div>
-
-            <div class="chat-input-bar">
-                <button type="button" class="icon-btn" id="emojiBtn">
-                    <i class="fa-regular fa-face-smile"></i>
-                </button>
-
-                <form id="messageForm" style="display: none; flex: 1; gap: 16px;">
-                    <input type="text" id="messageInput" placeholder="Escribe un mensaje" autocomplete="off">
-                    <button type="submit" class="icon-btn" id="sendBtn">
-                        <i class="fa-solid fa-microphone"></i>
-                    </button>
-                </form>
-
-                <input type="file" id="stickerLoader" accept="image/*" style="display: none;">
-            </div>
-
-        </div>
+        <button id="open-modal" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 sm:px-2.5 sm:py-2 rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-1 text-xs font-semibold active:scale-95">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span class="hidden xs:inline">Nueva</span>
+        </button>
+      </div>
 
     </div>
+  </header>
 
-    <script type="module" src="script.js"></script>
+  <!-- Contenido Principal -->
+  <main class="max-w-md mx-auto p-4 space-y-4">
+
+    <!-- Selector de Alumno -->
+    <div class="bg-slate-900/90 border border-indigo-500/30 p-3 rounded-2xl shadow-lg flex items-center gap-2">
+      <i data-lucide="user-check" class="w-5 h-5 text-indigo-400 shrink-0"></i>
+      <select id="active-user-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-indigo-300 font-semibold focus:outline-none focus:border-indigo-500">
+        <!-- Carga dinámica -->
+      </select>
+    </div>
+
+    <!-- Barra de Progreso Personal -->
+    <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl space-y-2">
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-slate-400 font-medium flex items-center gap-1.5">
+          <i data-lucide="trending-up" class="w-4 h-4 text-indigo-400"></i>
+          Tu progreso
+        </span>
+        <span id="progress-text" class="font-bold text-indigo-400">0% completado</span>
+      </div>
+      <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+        <div id="progress-bar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="relative">
+      <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+      <input type="text" id="search-input" placeholder="Buscar por materia o descripción..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 transition-all">
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 gap-1 text-xs">
+      <button data-filter="todas" class="filter-btn active flex-1 py-2 rounded-xl font-medium transition-all bg-indigo-600 text-white">Todas</button>
+      <button data-filter="pendientes" class="filter-btn flex-1 py-2 rounded-xl font-medium transition-all text-slate-400 hover:text-white">Pendientes</button>
+      <button data-filter="listas" class="filter-btn flex-1 py-2 rounded-xl font-medium transition-all text-slate-400 hover:text-white">Listas</button>
+    </div>
+
+    <!-- Contenedor de Tareas -->
+    <div id="tasks-container" class="space-y-3">
+      <!-- Carga dinámica -->
+    </div>
+
+  </main>
+
+  <!-- Modal Publicar Nueva Tarea -->
+  <div id="modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-slate-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-400"></i>
+          <h3 class="font-bold text-base text-white">Publicar Nueva Tarea</h3>
+        </div>
+        <button id="close-modal" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-all">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="task-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Materia / Asignatura</label>
+          <select id="subject" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+            <option value="" disabled selected>Seleccionar una materia...</option>
+            <option value="Matemáticas">Matemáticas</option>
+            <option value="Física">Física</option>
+            <option value="Química">Química</option>
+            <option value="Biología">Biología</option>
+            <option value="Historia">Historia</option>
+            <option value="Geografía">Geografía</option>
+            <option value="Lenguaje">Lenguaje</option>
+            <option value="Inglés">Inglés</option>
+            <option value="Filosofía">Filosofía</option>
+            <option value="Psicología">Psicología</option>
+            <option value="Artes Plásticas">Artes Plásticas</option>
+            <option value="Música">Música</option>
+            <option value="Educación Física">Educación Física</option>
+            <option value="Computación">Computación</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Detalle de la Tarea</label>
+          <textarea id="description" required rows="3" placeholder="Indica exactamente qué hay que entregar o revisar..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Prioridad</label>
+            <select id="priority" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+              <option value="Normal">Normal</option>
+              <option value="Media">Media</option>
+              <option value="Alta">Alta</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha de Revisión</label>
+            <input type="date" id="due-date" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Tu Nombre</label>
+          <input type="text" id="author" required placeholder="Ej. Alex" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-xs mt-2 active:scale-95">
+          Publicar para el Curso
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cargar Lucide primero -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Tu script principal después -->
+<script type="module" src="script.js"></script>
 </body>
 </html>
